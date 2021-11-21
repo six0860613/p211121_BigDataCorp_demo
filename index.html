@@ -19,7 +19,7 @@
             <div class="col-12 col-md-3 d-flex align-items-center flex-column">
                 <img class="logo" src="./img/taipeilogo.png" alt="">
                 <div class="w-100"></div>
-                <span class="logo-w">109年人口戶數及性別</span>
+                <span class="logo-w">108年人口戶數及性別</span>
             </div>
             <div class="col-12 col-md-9 selectWrap">
                 <div class="form-row options">
@@ -27,18 +27,18 @@
                     <div class="form-group m-0">
                         <select name="city" id="city" class="form-control">
                             <option value="0">請選擇...</option>
-                            <option value="1">中正區</option>
-                            <option value="2">大同區</option>
-                            <option value="3">中山區</option>
-                            <option value="4">松山區</option>
-                            <option value="5">大安區</option>
-                            <option value="6">萬華區</option>
-                            <option value="7">信義區</option>
-                            <option value="8">士林區</option>
-                            <option value="9">北投區</option>
-                            <option value="10">內湖區</option>
-                            <option value="11">南港區</option>
-                            <option value="12">文山區</option>
+                            <option value="中正區">中正區</option>
+                            <option value="大同區">大同區</option>
+                            <option value="中山區">中山區</option>
+                            <option value="松山區">松山區</option>
+                            <option value="大安區">大安區</option>
+                            <option value="萬華區">萬華區</option>
+                            <option value="信義區">信義區</option>
+                            <option value="士林區">士林區</option>
+                            <option value="北投區">北投區</option>
+                            <option value="內湖區">內湖區</option>
+                            <option value="南港區">南港區</option>
+                            <option value="文山區">文山區</option>
                         </select>
                     </div>
                     <button id="btn">click</button>
@@ -67,76 +67,113 @@
             labels: ['共同生活戶', '單獨生活戶'],
             datasets: [
                 {
-                    backgroundColor: 'rgba(54, 162, 235)',              
-                    data: [60, 70],            
+                    backgroundColor: 'rgba(54, 162, 235)',
+                    data: [0, 0],
                     label: '男',
                     barPercentage: '0.5',
                 },
                 {
-                    backgroundColor: 'rgba(255, 99, 132)',              
-                    data: [56, 90],             
-                    label: '女' ,
+                    backgroundColor: 'rgba(255, 99, 132)',
+                    data: [0, 0],
+                    label: '女',
                     barPercentage: '0.5',
                 }
             ]
         };
-        let ctx = document.getElementById('myChart').getContext('2d');;
-        const myBarChart = new Chart(ctx, {
-            type: 'bar',
-            data: chartData,
-            options: {
-                maintainAspectRatio: false,
-                hover: { mode: null },
-                plugins: {
-                    tooltip: {
-                        enabled: false,
-                    },
-                    legend: {
-                        display: true,
-                        position: 'bottom',
-                        labels: {
-                            fontColor: 'rgb(255, 99, 132)'
-                        }
-                    },
+        let option = {
+            maintainAspectRatio: false,
+            hover: { mode: null },
+            plugins: {
+                tooltip: {
+                    enabled: false,
                 },
-                scales: {
-                    y: {
-                        type: 'linear',
-                        grace: '5%'
-                    }
-                },
-                animation: {
-                    duration: 2000,
-                    easing: 'easeOutQuart',
-                    onComplete: (x) => {
-                        const chart = x.chart;
-                        let { ctx } = chart;
-                        ctx.textAlign = 'center';
-                        ctx.fillStyle = "rgba(0, 0, 0, 1)";
-                        ctx.font = 'bold 16px';
-                        ctx.textBaseline = 'bottom';
-                        const metaFunc = this.getDatasetMeta;
-                        chart.data.datasets.forEach((dataset, i) => {
-                            let meta = chart.getDatasetMeta(i);
-                            meta.data.forEach((bar, index) => {
-                                let data = dataset.data[index];
-                                ctx.fillText(`${data}`, bar.x, bar.y - 5);
-                            });
-                        });
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: 'rgb(255, 99, 132)'
                     }
                 },
             },
+            scales: {
+                y: {
+                    type: 'linear',
+                    grace: '5%'
+                }
+            },
+            animation: {
+                duration: 2000,
+                easing: 'easeOutQuart',
+                onComplete: (x) => {
+                    const chart = x.chart;
+                    let { ctx } = chart;
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = "rgba(0, 0, 0, 1)";
+                    ctx.font = 'bold 16px';
+                    ctx.textBaseline = 'bottom';
+                    const metaFunc = this.getDatasetMeta;
+                    chart.data.datasets.forEach((dataset, i) => {
+                        let meta = chart.getDatasetMeta(i);
+                        meta.data.forEach((bar, index) => {
+                            let data = dataset.data[index];
+                            ctx.fillText(`${data}`, bar.x, bar.y - 5);
+                        });
+                    });
+                }
+            },
+        };
+        let ctx = document.getElementById('myChart').getContext('2d');
+        let myBarChart = new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: option,
         });
 
-        const getData = async () =>{
+        let output = [];
+        const getData = async () => {
             let r = await fetch('https://od.moi.gov.tw/api/v1/rest/datastore/301000000A-000082-041');
             let result = await r.json();
             console.log('object', result);
+            if (result.success) {
+                let arr = result.result.records;
+                output = arr.filter(function (v) {
+                    return v.site_id.includes('臺北市');
+                })
+            }
         };
-
-        $('#btn').on('click', function(){
-            console.log('click');
-            getData();
+        getData();
+        $('#city').change(function () {
+            const dt = $(this).val();
+            let newData = output.filter((v) => {
+                return v.site_id.includes(dt);
+            })
+            console.log('new', newData);
+            // "household_ordinary_m": "共同生活戶_男",
+            // "household_business_m": "共同事業戶_男",
+            // "household_single_m": "單獨生活戶_男",
+            // "household_ordinary_f": "共同生活戶_女",
+            // "household_business_f": "共同事業戶_女",
+            // "household_single_f": "單獨生活戶_女"
+            let ho_male = 0;
+            let ho_female = 0;
+            let hs_male = 0;
+            let hs_female = 0;
+            newData.forEach((v, i) => {
+                ho_male += parseInt(v.household_ordinary_m);
+                ho_female += parseInt(v.household_ordinary_f);
+                hs_male += parseInt(v.household_single_m);
+                hs_female += parseInt(v.household_single_f);
+            });
+            console.log('total', hs_male, hs_female);
+            chartData.datasets[0].data = [ho_male, hs_male];
+            chartData.datasets[1].data = [ho_female, hs_female];
+            let ctx = document.getElementById('myChart').getContext('2d');
+            myBarChart.destroy();
+            myBarChart = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: option,
+            });
         });
     </script>
 </body>
