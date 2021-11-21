@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <link rel="stylesheet" href="./style.css">
+
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="row mt-3">
+            <div class="col-12 col-md-3 d-flex align-items-center flex-column">
+                <img class="logo" src="./img/taipeilogo.png" alt="">
+                <div class="w-100"></div>
+                <span class="logo-w">109年人口戶數及性別</span>
+            </div>
+            <div class="col-12 col-md-9 selectWrap">
+                <div class="form-row options">
+                    <span class="district-w">地區</span>
+                    <div class="form-group m-0">
+                        <select name="city" id="city" class="form-control">
+                            <option value="0">請選擇...</option>
+                            <option value="1">中正區</option>
+                            <option value="2">大同區</option>
+                            <option value="3">中山區</option>
+                            <option value="4">松山區</option>
+                            <option value="5">大安區</option>
+                            <option value="6">萬華區</option>
+                            <option value="7">信義區</option>
+                            <option value="8">士林區</option>
+                            <option value="9">北投區</option>
+                            <option value="10">內湖區</option>
+                            <option value="11">南港區</option>
+                            <option value="12">文山區</option>
+                        </select>
+                    </div>
+                    <button id="btn">click</button>
+                </div>
+                <div class="chartWrap">
+                    <canvas id="myChart" class="chartMain"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+
+        let chartData = {
+            // X軸項目
+            labels: ['共同生活戶', '單獨生活戶'],
+            datasets: [
+                {
+                    backgroundColor: 'rgba(54, 162, 235)',              
+                    data: [60, 70],            
+                    label: '男',
+                    barPercentage: '0.5',
+                },
+                {
+                    backgroundColor: 'rgba(255, 99, 132)',              
+                    data: [56, 90],             
+                    label: '女' ,
+                    barPercentage: '0.5',
+                }
+            ]
+        };
+        let ctx = document.getElementById('myChart').getContext('2d');;
+        const myBarChart = new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: {
+                maintainAspectRatio: false,
+                hover: { mode: null },
+                plugins: {
+                    tooltip: {
+                        enabled: false,
+                    },
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            fontColor: 'rgb(255, 99, 132)'
+                        }
+                    },
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        grace: '5%'
+                    }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutQuart',
+                    onComplete: (x) => {
+                        const chart = x.chart;
+                        let { ctx } = chart;
+                        ctx.textAlign = 'center';
+                        ctx.fillStyle = "rgba(0, 0, 0, 1)";
+                        ctx.font = 'bold 16px';
+                        ctx.textBaseline = 'bottom';
+                        const metaFunc = this.getDatasetMeta;
+                        chart.data.datasets.forEach((dataset, i) => {
+                            let meta = chart.getDatasetMeta(i);
+                            meta.data.forEach((bar, index) => {
+                                let data = dataset.data[index];
+                                ctx.fillText(`${data}`, bar.x, bar.y - 5);
+                            });
+                        });
+                    }
+                },
+            },
+        });
+
+        const getData = async () =>{
+            let r = await fetch('https://od.moi.gov.tw/api/v1/rest/datastore/301000000A-000082-041');
+            let result = await r.json();
+            console.log('object', result);
+        };
+
+        $('#btn').on('click', function(){
+            console.log('click');
+            getData();
+        });
+    </script>
+</body>
+
+</html>
