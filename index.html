@@ -23,9 +23,14 @@
             </div>
             <div class="col-12 col-md-9 selectWrap">
                 <div class="form-row options">
+                    <span class="loading-w">載入中...</span>
+                    <div class="spinner-border text-success" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <div class="w-100 my-2"></div>
                     <span class="district-w">地區</span>
                     <div class="form-group m-0">
-                        <select name="city" id="city" class="form-control">
+                        <select name="city" id="city" class="form-control" disabled>
                             <option value="0">請選擇...</option>
                             <option value="中正區">中正區</option>
                             <option value="大同區">大同區</option>
@@ -41,7 +46,6 @@
                             <option value="文山區">文山區</option>
                         </select>
                     </div>
-                    <button id="btn">click</button>
                 </div>
                 <div class="chartWrap">
                     <canvas id="myChart" class="chartMain"></canvas>
@@ -102,7 +106,7 @@
                 }
             },
             animation: {
-                duration: 2000,
+                duration: 1000,
                 easing: 'easeOutQuart',
                 onComplete: (x) => {
                     const chart = x.chart;
@@ -131,14 +135,21 @@
 
         let output = [];
         const getData = async () => {
-            let r = await fetch('https://od.moi.gov.tw/api/v1/rest/datastore/301000000A-000082-041');
+            let r = await fetch('https://nodejs-proxy-server-nethercod.herokuapp.com/', {
+                headers: {
+                    'Target-URL': 'https://od.moi.gov.tw/api/v1/rest/datastore/301000000A-000082-041'
+                }
+            });
             let result = await r.json();
             console.log('object', result);
             if (result.success) {
                 let arr = result.result.records;
                 output = arr.filter(function (v) {
                     return v.site_id.includes('臺北市');
-                })
+                });
+                $('.loading-w').text('戶口資料已載入，請選擇地區');
+                $('.spinner-border').remove();
+                $('#city').prop('disabled', false);
             }
         };
         getData();
@@ -146,8 +157,7 @@
             const dt = $(this).val();
             let newData = output.filter((v) => {
                 return v.site_id.includes(dt);
-            })
-            console.log('new', newData);
+            });
             // "household_ordinary_m": "共同生活戶_男",
             // "household_business_m": "共同事業戶_男",
             // "household_single_m": "單獨生活戶_男",
@@ -158,23 +168,20 @@
             let ho_female = 0;
             let hs_male = 0;
             let hs_female = 0;
+
             newData.forEach((v, i) => {
                 ho_male += parseInt(v.household_ordinary_m);
                 ho_female += parseInt(v.household_ordinary_f);
                 hs_male += parseInt(v.household_single_m);
                 hs_female += parseInt(v.household_single_f);
             });
-            console.log('total', hs_male, hs_female);
-            chartData.datasets[0].data = [ho_male, hs_male];
-            chartData.datasets[1].data = [ho_female, hs_female];
-            let ctx = document.getElementById('myChart').getContext('2d');
-            myBarChart.destroy();
-            myBarChart = new Chart(ctx, {
-                type: 'bar',
-                data: chartData,
-                options: option,
-            });
+            setTimeout(function () {
+                myBarChart.data.datasets[0].data = [ho_male, hs_male];
+                myBarChart.data.datasets[1].data = [ho_female, hs_female];
+                myBarChart.update();
+            }, 20);
         });
+
     </script>
 </body>
 
